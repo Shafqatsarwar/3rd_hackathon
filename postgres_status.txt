@@ -1,2 +1,1 @@
-✓ All 1 PostgreSQL pods running
-✓ PostgreSQL is accessible and accepting connections
+✗ Failed to check PostgreSQL status: Command '['kubectl', 'get', 'pods', '-n', 'postgresql', '-o', 'json']' returned non-zero exit status 1.
