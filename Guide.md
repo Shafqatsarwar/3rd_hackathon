@@ -39,6 +39,8 @@ uvicorn main:app --reload --port 8000 # API: http://localhost:8000
 ```bash
 # Terminal 1 - Backend
 cd src/backend && uvicorn main:app --reload --port 8000
+or: & "C:\Users\excel\AppData\Local\Programs\Python\Python312\python.exe" -m uvicorn main:app --reload --port 8000
+Alternative: .\start_backend.bat
 # Terminal 2 - Frontend
 cd src/frontend && npm run dev
 ```
@@ -111,7 +113,26 @@ dir /b .claude\skills
 
 ## Phase 2: Infrastructure Setup (WSL Required)
 
-### 2.1 Start Minikube Cluster
+### 🗓️ Day 2: Resume Deployment
+If you stopped the cluster and want to continue working:
+
+1.  **Start Minikube**:
+    ```bash
+    minikube start --driver=docker
+    ```
+2.  **Verify Pods**:
+    ```bash
+    kubectl get pods -A
+    ```
+3.  **Deploy Remaining Parts**:
+    ```bash
+    ./deploy_infra_wsl.sh
+    ```
+    *(Ideally, run this once to ensure everything is up and running).*
+
+---
+
+### 2.1 First Time Setup (Start Here)
 ```bash
 # WSL/Ubuntu
 minikube start --cpus=4 --memory=8192 --driver=docker
@@ -241,18 +262,20 @@ kubectl port-forward svc/learnflow-docs 8080:80 -n learnflow
 | Missing specs | Run `dir specs\governance` to verify files exist |
 | Path issues | Run from project root directory |
 
-### Minikube Issues
+### Minikube Issues (WSL)
 | Problem | Solution |
 |---------|----------|
 | Won't start | `minikube delete && minikube start --driver=docker` |
 | Driver error | Ensure Docker Desktop is running with WSL integration |
 | Resources | Increase: `--cpus=4 --memory=8192` |
+| `exec format error` | Run `rm ~/.docker/config.json` (Auth issue) |
 
 ### Kubernetes Issues
 | Problem | Solution |
 |---------|----------|
 | Pods Pending | `kubectl describe pod <name>` - check Events |
-| ImagePullBackOff | Verify image name, check registry access |
+| `manifest unknown` | Kafka tag 3.7.0 is gone. Use `3.9.0` or `latest`. |
+| `ImagePullBackOff` | Check `~/.docker/config.json` or Registry network. |
 | CrashLoopBackOff | `kubectl logs <pod> --previous` for errors |
 | Service inaccessible | Verify selector matches pod labels |
 

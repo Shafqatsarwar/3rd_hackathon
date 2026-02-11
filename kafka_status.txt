@@ -1,0 +1,4 @@
+✗ 0/3 Kafka pods running
+  - kafka-controller-0: Pending
+  - kafka-controller-1: Pending
+  - kafka-controller-2: Pending

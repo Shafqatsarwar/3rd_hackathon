@@ -2,7 +2,7 @@ import requests
 import sys
 
 def log(msg):
-    with open("verify_output.txt", "a") as f:
+    with open("verify_output_new.txt", "a") as f:
         f.write(msg + "\n")
 
 def test_backend():

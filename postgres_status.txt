@@ -1,0 +1,2 @@
+✓ All 1 PostgreSQL pods running
+✓ PostgreSQL is accessible and accepting connections

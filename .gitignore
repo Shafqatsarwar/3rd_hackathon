@@ -67,3 +67,8 @@ Desktop.ini
 
 *.zip
 recordings/
+
+# Kubernetes Binaries
+minikube-linux-amd64
+kubectl
+kubectl.exe

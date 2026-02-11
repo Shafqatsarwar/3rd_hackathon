@@ -18,6 +18,12 @@ spec:
   containers:
   - name: migrator
     image: bitnami/postgresql:latest
+    env:
+    - name: PGPASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: postgresql
+          key: postgres-password
     command:
     - sh
     - -c
