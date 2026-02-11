@@ -10,14 +10,23 @@ TAG=${3:-"latest"}
 
 echo "Building Next.js Docker image: $APP_NAME"
 
-# Navigate to app directory
-APP_DIR="src/frontend"
-if [ ! -d "$APP_DIR" ]; then
-    echo "✗ App directory not found: $APP_DIR"
-    exit 1
+# Handle local registry case
+if [ "$REGISTRY" == "local" ] || [ -z "$REGISTRY" ]; then
+    IMAGE_NAME="$APP_NAME:$TAG"
+else
+    IMAGE_NAME="$REGISTRY/$APP_NAME:$TAG"
 fi
 
-cd "$APP_DIR"
+# Locate app directory (support running from root or skill dir)
+if [ -d "src/frontend" ]; then
+    APP_DIR="src/frontend"
+elif [ -d "../../../src/frontend" ]; then
+    APP_DIR="../../../src/frontend"
+else
+    APP_DIR="."
+fi
+
+cd "$APP_DIR" || { echo "Failed to cd to $APP_DIR"; exit 1; }
 
 # Check for Dockerfile
 if [ ! -f "Dockerfile" ]; then
@@ -56,9 +65,6 @@ CMD ["node", "server.js"]
 EOF
     echo "✓ Dockerfile created"
 fi
-
-# Build the Docker image
-IMAGE_NAME="$REGISTRY/$APP_NAME:$TAG"
 echo "Building image: $IMAGE_NAME"
 
 docker build -t "$IMAGE_NAME" .

@@ -63,6 +63,7 @@ spec:
       containers:
       - name: $APP_NAME
         image: $APP_NAME:latest
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3000
         env:
