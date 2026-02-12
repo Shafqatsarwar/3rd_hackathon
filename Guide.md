@@ -98,9 +98,22 @@ bash .claude/skills/postgres-k8s-setup/scripts/deploy.sh
 ```
 **Verify**: `kubectl get pods -A` (Look for `kafka` and `postgresql` namespaces).
 
-### Phase 3: Backend (Agents)
-**Current Stage**: Deploying AI Agents.  
-**Command**: `bash .claude/skills/phase3-deploy/scripts/deploy_all_agents.sh`
+### Phase 3: Backend (Agents) [x]
+**Status**: COMPLETE (6 Agents @ 2/2 Ready).
+
+### Phase 4: Frontend (UI)
+**Current Stage**: Deploying Next.js UI.
+**Verify**: `kubectl get pods -n learnflow -l app=learnflow-frontend`.
+**Resume Commands**:
+```bash
+# 1. Build Frontend Image
+eval $(minikube docker-env)
+cd src/frontend
+docker build -t learnflow-frontend:latest .
+
+# 2. Deploy
+bash .claude/skills/nextjs-k8s-deploy/scripts/deploy_nextjs.sh
+```
 
 ---
 
