@@ -6,115 +6,77 @@
 
 ## 🛑 CRITICAL PRE-REQUISITES (Do these first!)
 
-To avoid the "exec format error" or "ImagePullBackOff" errors, follow these 2 steps **before** starting.
+To avoid the "exec format error" or "ImagePullBackOff" errors on Windows/WSL, follow these steps:
 
 ### 1. Fix Docker Config (WSL)
-Run this command in your **Ubuntu Terminal** to remove the Windows-specific config that breaks Linux:
+Renaming the Windows credential store prevents WSL from hanging on `.exe` files:
 
 ```bash
-rm -f ~/.docker/config.json
-```
-*(This is safe. Docker will regenerate a compatible config if needed).*
-
-### 2. Enable Docker Integration
-1.  Open **Docker Desktop** on Windows.
-2.  Go to **Settings** (Gear Icon) -> **Resources** -> **WSL Integration**.
-3.  **Toggle "Ubuntu" to ON**. (Even if "Default WSL distro" is checked, toggle Ubuntu explicitly).
-4.  Click **Apply & Restart**.
-
----
-
-## 1. Environment Variables
-
-Ensure your `.env` file in the project root has these added at the bottom:
-
-```bash
-# WSL Credentials
-WSL_USER=shafqatsarwar
-WSL_PASSWORD=shafqat
+sed -i 's/"credsStore": "desktop.exe"/"_credsStore": "desktop.exe"/' ~/.docker/config.json
 ```
 
 ---
 
-## 2. Install Tools (If missing)
+## 2. Resource Cleanup (Free up RAM)
 
-Run these checks in your Ubuntu Terminal. If any command says "not found", run the install block below.
+If you have less than 8GB RAM, you **must** free up space before starting the cluster:
 
 ```bash
-# Check existing tools
-minikube version
-kubectl version --client
-```
+# Clear all unused images/containers
+docker system prune -a --volumes -f
 
-**Install Script (Copy & Paste if tools are missing):**
-```bash
-# Install Kubectl
-curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
-
-# Install Minikube
-curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
-sudo install minikube-linux-amd64 /usr/local/bin/minikube
+# Clear Linux buffer cache
+sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches'
 ```
 
 ---
 
-## 3. Start Infrastructure
+## 3. Start Infrastructure (RAM Optimized)
 
 ### Step 1: Start Minikube
-**If you had previous failures, delete the old cluster first:**
+For a 3.7GB RAM host, use these specific limits:
 
 ```bash
+# Delete old cluster if it exists
 minikube delete
-```
 
-**Then start fresh:**
-```bash
-minikube start
+# Start with optimized memory (3072MB)
+minikube start --driver=docker --memory=3072 --cpus=2
 ```
-*Wait for "Done! kubectl is now configured..."*
 
 ### Step 2: Deploy Services
-Run the automated deployment script:
+Our scripts are now optimized to use **Public ECR** (to avoid Docker Hub pull errors) and **No-Persistence** (to save RAM).
 
 ```bash
 cd /mnt/d/Panaverse/projects/3rd_hackathon
-./deploy_infra_wsl.sh
+
+# 1. Deploy Kafka
+bash .claude/skills/kafka-k8s-setup/scripts/deploy.sh
+
+# 2. Deploy PostgreSQL
+bash .claude/skills/postgres-k8s-setup/scripts/deploy.sh
 ```
-
----
-
-## 4. Verification
-
-After the script finishes, check that the pods are actually running:
-
-```bash
-# Check all pods in all namespaces
-kubectl get pods -A
-```
-
-**Success Criteria:**
--   Pods in `kafka` namespace are `Running`.
--   Pods in `postgresql` namespace are `Running`.
 
 ---
 
 ## 🚑 Troubleshooting
 
 **Issue: `manifest unknown` (Image Pull Error)**
--   **Cause**: The specific Docker image tag (e.g., `3.7.0-debian-12-r1`) was removed from the registry.
--   **Fix**: Update `scripts/deploy.sh` to use a valid tag like `3.9.0` or `latest`.
+-   **Solution**: Use the AWS Public ECR registry instead of Docker Hub.
+-   **Helm Settings**:
     ```bash
-    helm upgrade --install kafka bitnami/kafka --set image.tag=3.9.0 ...
+    --set image.registry=public.ecr.aws
+    --set image.repository=bitnami/kafka (or postgresql)
+    --set global.security.allowInsecureImages=true
     ```
 
-**Issue: `Init:ImagePullBackOff` or `ErrImagePull`**
--   **Cause**: Minikube started with the bad Docker config.
--   **Fix**:
-    1.  Run `rm -f ~/.docker/config.json` again.
-    2.  Run `minikube delete`.
-    3.  Run `minikube start`.
+**Issue: `context deadline exceeded` (Timeout)**
+-   **Cause**: The pod is taking too long to pull or initialization is slow due to RAM pressure.
+-   **Fix**: 
+    1. Close high-RAM Windows apps (Chrome, etc.).
+    2. Increase Helm timeout: `--timeout 900s`.
+    3. Disable database persistence: `--set primary.persistence.enabled=false`.
 
 **Issue: `exec format error`**
 -   **Cause**: Docker is trying to use `docker-credential-desktop.exe`.
--   **Fix**: Run `rm -f ~/.docker/config.json`.
+-   **Fix**: Run the `sed` command in Step 1 to rename the `credsStore`.

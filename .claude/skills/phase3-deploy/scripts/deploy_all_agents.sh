@@ -3,23 +3,18 @@ set -e
 
 AGENTS=("triage-agent" "concepts-agent" "debug-agent" "exercise-agent" "progress-agent" "code-review-agent")
 NAMESPACE="learnflow"
-BACKEND_DIR="$(cd "$(dirname "$0")/../../.." && pwd)/src/backend"
 
-echo "🚀 Deploying 6 AI Agents to Kubernetes..."
+echo "🚀 Deploying 6 AI Agents to Kubernetes (Optimized)..."
 
-# Create ConfigMap from backend code
-kubectl create configmap backend-code \
-  --from-file=main.py="$BACKEND_DIR/main.py" \
-  -n $NAMESPACE \
-  --dry-run=client -o yaml | kubectl apply -f -
+# Ensure namespace exists
+kubectl create namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
 
 # Deploy each agent
 for AGENT in "${AGENTS[@]}"; do
     echo ""
     echo "📦 Deploying $AGENT..."
     
-    # Create deployment manifest
-    cat &lt;&lt;EOF | kubectl apply -f -
+    cat <<EOF | kubectl apply -f -
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -29,7 +24,6 @@ metadata:
     dapr.io/enabled: "true"
     dapr.io/app-id: "$AGENT"
     dapr.io/app-port: "8000"
-    dapr.io/log-level: "info"
 spec:
   replicas: 1
   selector:
@@ -46,36 +40,22 @@ spec:
     spec:
       containers:
       - name: $AGENT
-        image: python:3.12-slim
-        command: ["/bin/bash", "-c"]
-        args:
-          - |
-            pip install --no-cache-dir fastapi uvicorn pydantic python-dotenv httpx openai aiokafka dapr &gt; /dev/null 2&gt;&1
-            cd /app
-            exec uvicorn main:app --host 0.0.0.0 --port 8000
-        ports:
-        - containerPort: 8000
-        volumeMounts:
-        - name: code
-          mountPath: /app
+        image: learnflow-backend:latest
+        imagePullPolicy: IfNotPresent
         env:
         - name: AGENT_NAME
           value: "$AGENT"
         - name: KAFKA_BOOTSTRAP
           value: "kafka.kafka.svc.cluster.local:9092"
         - name: DATABASE_URL
-          value: "postgresql://postgres:postgres@postgresql.postgresql.svc.cluster.local:5432/learnflow"
+          value: "postgresql://postgres:securePassword123@postgresql.postgresql.svc.cluster.local:5432/learnflow"
         resources:
           requests:
-            memory: "256Mi"
-            cpu: "100m"
+            memory: "128Mi"
+            cpu: "50m"
           limits:
-            memory: "512Mi"
-            cpu: "500m"
-      volumes:
-      - name: code
-        configMap:
-          name: backend-code
+            memory: "256Mi"
+            cpu: "200m"
 ---
 apiVersion: v1
 kind: Service
@@ -95,8 +75,8 @@ EOF
 done
 
 echo ""
-echo "⏳ Waiting for pods to be ready..."
-sleep 10
+echo "⏳ Waiting for pods to stabilize..."
+sleep 5
 
 kubectl get pods -n $NAMESPACE
 

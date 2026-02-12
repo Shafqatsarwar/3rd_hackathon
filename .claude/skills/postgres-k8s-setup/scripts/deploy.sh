@@ -12,23 +12,31 @@ helm repo update
 echo "Creating postgresql namespace..."
 kubectl create namespace postgresql --dry-run=client -o yaml | kubectl apply -f -
 
-# Deploy PostgreSQL using Helm with secure defaults
-echo "Deploying PostgreSQL..."
-helm install postgresql bitnami/postgresql \
+# Deploy PostgreSQL using Helm with optimized settings
+echo "Deploying PostgreSQL (Deep-Dive Optimized)..."
+helm upgrade --install postgresql bitnami/postgresql \
   --namespace postgresql \
+  --set global.security.allowInsecureImages=true \
+  --set image.registry=public.ecr.aws \
+  --set image.repository=bitnami/postgresql \
   --set auth.postgresPassword=securePassword123 \
   --set auth.database=learnflow \
   --set architecture=standalone \
-  --set primary.persistence.enabled=true \
-  --set primary.persistence.size=10Gi \
-  --set primary.resources.limits.cpu=1000m \
-  --set primary.resources.limits.memory=1Gi \
-  --set primary.resources.requests.cpu=250m \
+  --set primary.persistence.enabled=false \
+  --set primary.resources.limits.cpu=500m \
+  --set primary.resources.limits.memory=512Mi \
+  --set primary.resources.requests.cpu=100m \
   --set primary.resources.requests.memory=256Mi \
-  --set primary.service.ports.postgresql=5432
+  --set primary.service.ports.postgresql=5432 \
+  --timeout 900s \
+  --wait
 
-# Wait for pods to be ready
-echo "Waiting for PostgreSQL pod to be ready..."
-kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=postgresql -n postgresql --timeout=300s
-
-echo "✓ PostgreSQL deployed to namespace 'postgresql'"
+# Wait for pods with a long timeout and verify status
+echo "Waiting for PostgreSQL pod to be ready (up to 15 minutes)..."
+if kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=postgresql -n postgresql --timeout=900s; then
+  echo "✓ PostgreSQL successfully deployed and READY"
+else
+  echo "✗ PostgreSQL deployment FAILED (Timeout/State issues)"
+  kubectl describe pod -l app.kubernetes.io/name=postgresql -n postgresql | tail -n 20
+  exit 1
+fi

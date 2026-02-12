@@ -80,6 +80,30 @@ which minikube docker helm kubectl python3 node
 
 ---
 
+## 🗓️ Resuming the Project (Cheat Sheet)
+
+If you are starting a new session, use these commands to verify where you left off:
+
+### Phase 1: Foundation (Root & Env)
+**Verify**: `uv run uvicorn main:app --reload --port 8000`  
+**Command**: `python .claude/skills/spec-governance-check/scripts/validate_repo.py`
+
+### Phase 2: Infrastructure (K8s)
+**Start Cluster**: `minikube start --driver=docker --memory=3072 --cpus=2`  
+**Deploy Fixes**: 
+```bash
+# Run these in WSL if things aren't "READY"
+bash .claude/skills/kafka-k8s-setup/scripts/deploy.sh
+bash .claude/skills/postgres-k8s-setup/scripts/deploy.sh
+```
+**Verify**: `kubectl get pods -A` (Look for `kafka` and `postgresql` namespaces).
+
+### Phase 3: Backend (Agents)
+**Current Stage**: Deploying AI Agents.  
+**Command**: `bash .claude/skills/phase3-deploy/scripts/deploy_all_agents.sh`
+
+---
+
 ## Phase 1: Foundation & Skills Setup (Windows/WSL)
 
 ### 1.1 Governance Validation
@@ -113,59 +137,46 @@ dir /b .claude\skills
 
 ## Phase 2: Infrastructure Setup (WSL Required)
 
-### 🗓️ Day 2: Resume Deployment
+### 🗓️ Resume Deployment
 If you stopped the cluster and want to continue working:
 
-1.  **Start Minikube**:
+1.  **Start Minikube** (Optimized for 3.7GB RAM):
     ```bash
-    minikube start --driver=docker
+    minikube start --driver=docker --memory=3072 --cpus=2
     ```
 2.  **Verify Pods**:
     ```bash
     kubectl get pods -A
     ```
-3.  **Deploy Remaining Parts**:
-    ```bash
-    ./deploy_infra_wsl.sh
-    ```
-    *(Ideally, run this once to ensure everything is up and running).*
 
 ---
 
 ### 2.1 First Time Setup (Start Here)
 ```bash
 # WSL/Ubuntu
-minikube start --cpus=4 --memory=8192 --driver=docker
+minikube delete # Ensure a fresh start
+minikube start --driver=docker --memory=3072 --cpus=2
 
 # Verify cluster
 kubectl cluster-info
-minikube status
 ```
 
-### 2.2 Deploy Kafka
+### 2.2 Deploy Kafka (Lean Mode)
 ```bash
-cd .claude/skills/kafka-k8s-setup
-./scripts/deploy.sh
-python scripts/verify.py
-
-# Expected: "✓ kafka: 3/3 pods running"
+# Optimized for ECR Registry and low RAM
+bash .claude/skills/kafka-k8s-setup/scripts/deploy.sh
 ```
 
-### 2.3 Deploy PostgreSQL
+### 2.3 Deploy PostgreSQL (Lean Mode)
 ```bash
-cd .claude/skills/postgres-k8s-setup
-./scripts/deploy.sh
-./scripts/migrate.sh
-python scripts/verify.py
-
-# Expected: "✓ postgres: Connection successful"
+# Optimized for ECR Registry and low RAM
+bash .claude/skills/postgres-k8s-setup/scripts/deploy.sh
 ```
 
 ### 2.4 Verify Infrastructure
 ```bash
 kubectl get pods -A | grep -E "(kafka|postgres)"
-
-# All pods should be Running
+# Expected: "1/1 Running" for both controller-0 and postgresql-0
 ```
 
 ---
