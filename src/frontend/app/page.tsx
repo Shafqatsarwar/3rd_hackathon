@@ -27,7 +27,8 @@ export default function Home() {
     // Check backend health
     const checkBackend = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8000/health");
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
+        const response = await fetch(`${backendUrl}/health`);
         if (response.ok) {
           setBackendStatus("online");
         } else {
@@ -50,7 +51,8 @@ export default function Home() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/chat", {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:8000";
+      const response = await fetch(`${backendUrl}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: input, context: messages }),
@@ -178,8 +180,8 @@ export default function Home() {
             >
               <div
                 className={`max-w-[85%] lg:max-w-[70%] p-6 rounded-3xl relative shadow-lg ${message.role === "user"
-                    ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-tr-md"
-                    : "glass-card text-slate-200 rounded-tl-md border-white/10"
+                  ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-tr-md"
+                  : "glass-card text-slate-200 rounded-tl-md border-white/10"
                   }`}
               >
                 {message.agent && (

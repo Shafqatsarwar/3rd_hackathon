@@ -5,6 +5,9 @@ echo "Starting Kafka deployment on Kubernetes..."
 
 # Add the Bitnami Helm repository
 echo "Adding Bitnami Helm repository..."
+# Bypass Windows credential helper in WSL to avoid .exe format errors
+export DOCKER_CONFIG="/tmp/helm-docker-config-$(date +%s)"
+mkdir -p $DOCKER_CONFIG
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
 

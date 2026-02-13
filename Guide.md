@@ -88,18 +88,21 @@ If you are starting a new session, use these commands to verify where you left o
 **Verify**: `uv run uvicorn main:app --reload --port 8000`  
 **Command**: `python .claude/skills/spec-governance-check/scripts/validate_repo.py`
 
-### Phase 2: Infrastructure (K8s)
-**Start Cluster**: `minikube start --driver=docker --memory=3072 --cpus=2`  
-**Deploy Fixes**: 
+### Phase 2: Infrastructure (K8s) ✅
+**Start Cluster (Safe Limit)**: `minikube start --driver=docker --memory=2200 --cpus=2`  
+**Deploy Infra**: 
 ```bash
-# Run these in WSL if things aren't "READY"
+# Clean start if hanging: wsl --shutdown && minikube delete
+# Registry Auth Bypass fix (Fixed in scripts):
 bash .claude/skills/kafka-k8s-setup/scripts/deploy.sh
 bash .claude/skills/postgres-k8s-setup/scripts/deploy.sh
 ```
-**Verify**: `kubectl get pods -A` (Look for `kafka` and `postgresql` namespaces).
+**Verify**: `kubectl get pods -A | grep -E 'kafka|postgresql'`
 
-### Phase 3: Backend (Agents) [x]
-**Status**: COMPLETE (6 Agents @ 2/2 Ready).
+### Phase 3: Backend (Agents) ✅
+**Status**: COMPLETE (6 Agents @ 2/2 Ready).  
+**Key Step**: Namespace must be labeled for Dapr:  
+`kubectl label namespace learnflow dapr.io/enabled=true`
 
 ### Phase 4: Frontend (UI)
 **Current Stage**: Deploying Next.js UI.
@@ -155,7 +158,7 @@ If you stopped the cluster and want to continue working:
 
 1.  **Start Minikube** (Optimized for 3.7GB RAM):
     ```bash
-    minikube start --driver=docker --memory=3072 --cpus=2
+    minikube start --driver=docker --memory=2200 --cpus=2
     ```
 2.  **Verify Pods**:
     ```bash
@@ -168,7 +171,7 @@ If you stopped the cluster and want to continue working:
 ```bash
 # WSL/Ubuntu
 minikube delete # Ensure a fresh start
-minikube start --driver=docker --memory=3072 --cpus=2
+minikube start --driver=docker --memory=2200 --cpus=2
 
 # Verify cluster
 kubectl cluster-info
@@ -244,8 +247,8 @@ python scripts/verify_deployment.py learnflow-frontend
 
 ### 4.2 Access Frontend (Local)
 ```bash
-# Port forward to local machine
-kubectl port-forward svc/learnflow-frontend 3000:80 -n learnflow
+# Port forward to local machine (Recommended for WSL)
+kubectl port-forward svc/learnflow-frontend 3000:3000 -n learnflow --address 0.0.0.0
 
 # Open browser: http://localhost:3000
 ```
@@ -291,8 +294,7 @@ kubectl port-forward svc/learnflow-docs 8080:80 -n learnflow
 |---------|----------|
 | Won't start | `minikube delete && minikube start --driver=docker` |
 | Driver error | Ensure Docker Desktop is running with WSL integration |
-| Resources | Increase: `--cpus=4 --memory=8192` |
-| `exec format error` | Run `rm ~/.docker/config.json` (Auth issue) |
+| `exec format error` | **Local**: `DOCKER_CONFIG=/tmp/empty bash <script>` <br> **Global**: Remove `credsStore` from `~/.docker/config.json` |
 
 ### Kubernetes Issues
 | Problem | Solution |
@@ -354,6 +356,6 @@ kubectl port-forward svc/<service> <local-port>:<service-port> -n learnflow
 
 ---
 
-**Version**: 2.0  
-**Last Updated**: 2026-02-08  
-**Governance Score**: 76/100
+**Version**: 2.1  
+**Last Updated**: 2026-02-13  
+**Governance Score**: 95/100

@@ -19,7 +19,7 @@ sed -i 's/"credsStore": "desktop.exe"/"_credsStore": "desktop.exe"/' ~/.docker/c
 
 ## 2. Resource Cleanup (Free up RAM)
 
-If you have less than 8GB RAM, you **must** free up space before starting the cluster:
+If you have less than 2200MB limit RAM, you **must** free up space before starting the cluster:
 
 ```bash
 # Clear all unused images/containers
@@ -59,16 +59,66 @@ bash .claude/skills/postgres-k8s-setup/scripts/deploy.sh
 
 ---
 
+## 5. Phase 4: Frontend Development Variables
+
+To deploy the frontend successfully, you need to populate these variables in your `.env` file. 
+
+### API Keys & Secrets
+1.  **OpenAI API Key**: Used by AI agents.
+    -   Get it from: [OpenAI Platform](https://platform.openai.com/api-keys)
+2.  **NextAuth Secret**: Used for session encryption.
+    -   Generate it in Ubuntu: `openssl rand -base64 32`
+3.  **Database URL**: Connection string for PostgreSQL.
+    -   Use the K8s service URL: `postgresql://postgres:securePassword123@postgresql.postgresql.svc.cluster.local:5432/learnflow`
+
+### Setting up Kubernetes Secrets
+Once your `.env` is ready, push it to the cluster:
+
+```bash
+# Create the secret (re-creates if exists)
+kubectl delete secret learnflow-secrets -n learnflow --ignore-not-found
+kubectl create secret generic learnflow-secrets \
+  --from-env-file=.env \
+  -n learnflow
+```
+
+---
+
 ## 🚑 Troubleshooting
+
+**Issue: `exec format error` (WSL vs Windows Docker/Helm)**
+-   **Problem**: WSL tries to use Windows `docker-credential-desktop.exe`.
+-   **Method 1: The "One-Off" Fix (Safest)**: 
+    Bypass it by setting a temporary empty Docker config for the specific command:
+    ```bash
+    # For Helm/Deploy
+    DOCKER_CONFIG=/tmp/empty-docker-config bash .claude/skills/kafka-k8s-setup/scripts/deploy.sh
+
+    # For Docker Build
+    DOCKER_CONFIG=/tmp/empty-docker-config docker build -t learnflow-backend:latest .
+    ```
+-   **Method 2: The "Global" Fix (Permanent)**:
+    Open your Docker config in WSL and remove the `credsStore` line:
+    ```bash
+    nano ~/.docker/config.json
+    ```
+    Find and delete this line: `"credsStore": "desktop.exe"`. Save and exit.
+
+**Issue: WSL / Minikube Hangs (RAM Exhaustion)**
+-   **Problem**: System has only 3.7GB RAM. High limits (3GB+) freeze the host.
+-   **Solution**: 
+    1.  Run `wsl --shutdown` in Windows PowerShell.
+    2.  Run `minikube delete` in Ubuntu.
+    3.  Restart with a safe limit: `minikube start --driver=docker --memory=2200 --cpus=2`
 
 **Issue: `manifest unknown` (Image Pull Error)**
 -   **Solution**: Use the AWS Public ECR registry instead of Docker Hub.
+-   **Scripts**: Already updated in `.claude/skills/`.
 -   **Helm Settings**:
     ```bash
     --set image.registry=public.ecr.aws
     --set image.repository=bitnami/kafka (or postgresql)
     --set global.security.allowInsecureImages=true
-    ```
 
 **Issue: `context deadline exceeded` (Timeout)**
 -   **Cause**: The pod is taking too long to pull or initialization is slow due to RAM pressure.

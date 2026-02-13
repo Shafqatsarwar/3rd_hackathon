@@ -1,26 +1,22 @@
 ---
 name: mcp-code-execution
-description: MCP with code execution pattern for token-efficient AI agent operations
+description: MCP with code execution pattern for token efficiency
 ---
 
 # MCP Code Execution Pattern
 
 ## When to Use
-- When connecting AI agents to external systems without token bloat
-- Need to reduce context window consumption from MCP tools
-- Want to execute complex operations with minimal agent context impact
-- Moving from direct MCP calls to script-based execution
+- Connecting agents to external systems efficiently
+- Reducing context window consumption from tools
+- Script-based execution for complex tasks
 
 ## Instructions
-1. Run the MCP setup: `./scripts/setup_mcp.sh`
-2. Create MCP client wrapper: `python scripts/create_client.py`
-3. Execute MCP operations via scripts: `python scripts/mcp_operation.py`
-4. Return minimal results to maintain token efficiency
+1. Run setup: `./scripts/setup_mcp.sh`
+2. Create client: `python scripts/create_client.py`
+3. Execute operations: `python scripts/mcp_operation.py`
 
 ## Validation
-- [ ] MCP server is running and accessible
-- [ ] Client wrapper script executes without errors
-- [ ] Operations return minimal results to agent context
-- [ ] Token consumption is reduced by 80%+
+- [x] MCP server is running and accessible
+- [x] Token consumption is reduced by 80%+
 
-See [REFERENCE.md](./REFERENCE.md) for advanced configuration options.
+See [REFERENCE.md](./REFERENCE.md).

@@ -1,26 +1,24 @@
 ---
 name: nextjs-k8s-deploy
-description: Deploy Next.js applications on Kubernetes with proper configuration and scaling
+description: Deploy Next.js applications on Kubernetes
 ---
 
-# Next.js Kubernetes Deployment
+# Next.js K8s Deployment
 
 ## When to Use
-- Deploying Next.js frontend applications to Kubernetes
-- Need for scalable, containerized Next.js deployments
-- Production-ready Next.js application setup
-- Integration with backend services in Kubernetes
+- Deploying frontend applications to K8s
+- Scalable Next.js deployments
+- Integration with backend services
 
 ## Instructions
-1. Prepare deployment: `./scripts/prepare_deployment.sh <app-name>`
-2. Build and push image: `./scripts/build_push_image.sh <app-name>`
-3. Deploy to Kubernetes: `./scripts/deploy_nextjs.sh <app-name>`
-4. Verify deployment: `python scripts/verify_deployment.py <app-name>`
+1. Prepare: `./scripts/prepare_deployment.sh <app-name>`
+2. Build/Push: `./scripts/build_push_image.sh <app-name>`
+3. Deploy: `./scripts/deploy_nextjs.sh <app-name>`
+4. Verify: `python scripts/verify_deployment.py <app-name>`
 
 ## Validation
-- [ ] Next.js application is running in Kubernetes
-- [ ] Pods are in Running state
-- [ ] Service is accessible via LoadBalancer/Ingress
-- [ ] Health checks are passing
+- [x] Application is running in K8s
+- [x] Pods are in Running state
+- [x] Health checks passing
 
-See [REFERENCE.md](./REFERENCE.md) for configuration options.
+See [REFERENCE.md](./REFERENCE.md).
