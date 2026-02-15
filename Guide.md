@@ -20,6 +20,52 @@ LearnFlow is a **Hackathon III** project demonstrating **Reusable Intelligence a
 **Tech Stack**: Kubernetes • Dapr • Kafka • PostgreSQL • FastAPI • Next.js • Kong • ArgoCD
 
 ---
+## Quick Reference
+
+### Governance Check
+```bash
+python .claude\skills\spec-governance-check\scripts\validate_repo.py
+```
+
+### View All Skills
+```bash
+# Windows
+dir /b .claude\skills
+
+# WSL
+ls .claude/skills/
+```
+
+### Check Cluster Status
+```bash
+kubectl get pods -A
+minikube status
+```
+
+### Access Services
+```bash
+kubectl port-forward svc/<service> <local-port>:<service-port> -n learnflow
+```
+
+---
+
+## Key Files
+
+| File | Purpose |
+|------|---------|
+| `SKILLS.md` | Skill index & execution contract |
+| `AGENTS.md` | Agent behavioral contract |
+| `constitution.md` | Project governance law |
+| `specs/governance/*` | Machine-readable rules |
+| `guide.md` | This file |
+| `variables.md` | Environment variables |
+
+---
+
+**Version**: 2.1  
+**Last Updated**: 2026-02-13  
+**Governance Score**: 95/100
+
 ## 1. Local Development (Windows - No K8s)
 ### Frontend Only
 ```bash
@@ -49,6 +95,7 @@ cd src/frontend && npm run dev
 ```bash
 taskkill /F /IM uvicorn.exe /T
 ```
+
 ## 2. Governance Files
 
 | File | Purpose | Location |
@@ -313,49 +360,3 @@ kubectl port-forward svc/learnflow-docs 8080:80 -n learnflow
 | Skill not found | Verify `.claude/skills/<name>/SKILL.md` exists |
 
 ---
-
-## Quick Reference
-
-### Governance Check
-```bash
-python .claude\skills\spec-governance-check\scripts\validate_repo.py
-```
-
-### View All Skills
-```bash
-# Windows
-dir /b .claude\skills
-
-# WSL
-ls .claude/skills/
-```
-
-### Check Cluster Status
-```bash
-kubectl get pods -A
-minikube status
-```
-
-### Access Services
-```bash
-kubectl port-forward svc/<service> <local-port>:<service-port> -n learnflow
-```
-
----
-
-## Key Files
-
-| File | Purpose |
-|------|---------|
-| `SKILLS.md` | Skill index & execution contract |
-| `AGENTS.md` | Agent behavioral contract |
-| `constitution.md` | Project governance law |
-| `specs/governance/*` | Machine-readable rules |
-| `guide.md` | This file |
-| `variables.md` | Environment variables |
-
----
-
-**Version**: 2.1  
-**Last Updated**: 2026-02-13  
-**Governance Score**: 95/100

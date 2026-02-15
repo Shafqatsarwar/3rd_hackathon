@@ -42,6 +42,14 @@ minikube delete
 
 # Start with optimized memory (3072MB)
 minikube start --driver=docker --memory=3072 --cpus=2
+# To avoide space issues (2200MB)
+minikube start --driver=docker --memory=2200 --cpus=2
+
+**Problem**: System has only 3.7GB RAM. High limits (3GB+) freeze the host.
+-   **Solution**: 
+    1.  Run `wsl --shutdown` in Windows PowerShell.
+    2.  Run `minikube delete` in Ubuntu.
+    3.  Restart with a safe limit: `minikube start --driver=docker --memory=2200 --cpus=2`
 ```
 
 ### Step 2: Deploy Services
